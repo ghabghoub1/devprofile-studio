@@ -35,3 +35,8 @@ This MVP has no login, backend, or publishing integration. The stats section exp
 ## License
 
 MIT (see LICENSE).
+
+
+## v0.2 template gallery
+
+Open the **Templates** tab to switch between Professional, Minimal, Developer and Creative. Your profile information remains intact and the selected template is saved locally. The Markdown export follows the selected template. The visual preview is GitHub-inspired, not a pixel-perfect GitHub renderer.
