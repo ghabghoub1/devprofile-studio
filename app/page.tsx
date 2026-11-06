@@ -13,8 +13,6 @@ import {
   Trash2,
   Sparkles,
   Image as ImageIcon,
-  Upload,
-  Link2,
   BookOpen,
   ExternalLink,
 } from "lucide-react";
@@ -34,6 +32,7 @@ import ReadmePreview from "../components/preview/ReadmePreview";
 import ContentEditor from "../components/editor/ContentEditor";
 import AppearanceEditor from "../components/editor/AppearanceEditor";
 import TemplatesEditor from "../components/editor/TemplatesEditor";
+import BannerEditor from "../components/editor/BannerEditor";
 import PreviewControls, { type PreviewMode, type ProfileView } from "../components/preview/PreviewControls";
 import type { GitHubUser } from "../lib/github";
 
@@ -538,160 +537,14 @@ export default function Home() {
             </button>
           </div>
 
-          {/* ============================================
-              BANNER EDITOR
-          ============================================ */}
-
           {tab === "banner" ? (
-            <div className="sidebody">
-              <h3>Profile banner</h3>
-
-              <p className="hint">
-                Add a personal banner at the top of your README. GitHub already
-                displays your avatar in the profile sidebar.
-              </p>
-
-              <label className="bannercheck">
-                <input
-                  type="checkbox"
-                  checked={p.banner.enabled}
-                  onChange={(event) =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        enabled: event.target.checked,
-                      },
-                    }))
-                  }
-                />
-                Show banner
-              </label>
-
-              <div className="bannerchoices">
-                <button
-                  className={p.banner.source === "upload" ? "chosen" : ""}
-                  onClick={() =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        source: "upload",
-                      },
-                    }))
-                  }
-                >
-                  <Upload size={15} />
-                  Upload
-                </button>
-
-                <button
-                  className={p.banner.source === "url" ? "chosen" : ""}
-                  onClick={() =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        source: "url",
-                      },
-                    }))
-                  }
-                >
-                  <Link2 size={15} />
-                  Image URL
-                </button>
-              </div>
-
-              {p.banner.source === "upload" ? (
-                <>
-                  <label className="uploadbox">
-                    Choose PNG, JPG or WebP (max 5 MB)
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={(event) =>
-                        onBannerFile(event.target.files?.[0])
-                      }
-                    />
-                  </label>
-
-                  <p className="hint">
-                    Uploaded images are stored only for this browser session.
-                    Export the ZIP before refreshing.
-                  </p>
-                </>
-              ) : (
-                <label className="field">
-                  <span>Public HTTPS image URL</span>
-
-                  <input
-                    placeholder="https://example.com/banner.png"
-                    value={p.banner.url}
-                    onChange={(event) =>
-                      setP((old) => ({
-                        ...old,
-                        banner: {
-                          ...old.banner,
-                          url: event.target.value,
-                          enabled: true,
-                        },
-                      }))
-                    }
-                  />
-                </label>
-              )}
-
-              <label className="field">
-                <span>Accessible description</span>
-
-                <input
-                  value={p.banner.alt}
-                  onChange={(event) =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        alt: event.target.value,
-                      },
-                    }))
-                  }
-                />
-              </label>
-
-              {bannerError && (
-                <p role="alert" className="bannererror">
-                  {bannerError}
-                </p>
-              )}
-
-              {bannerSrc && (
-                <img
-                  className="bannerthumb"
-                  src={bannerSrc}
-                  alt={p.banner.alt || "Banner preview"}
-                />
-              )}
-
-              <button
-                className="secondary"
-                onClick={() =>
-                  setP((old) => ({
-                    ...old,
-                    banner: {
-                      ...old.banner,
-                      enabled: false,
-                    },
-                  }))
-                }
-              >
-                Remove banner
-              </button>
-
-              <p className="hint">
-                Uploaded banners are exported with README.md inside a ZIP. URL
-                banners reference the public image directly.
-              </p>
-            </div>
+            <BannerEditor
+              profile={p}
+              setProfile={setP}
+              onBannerFile={onBannerFile}
+              bannerError={bannerError}
+              bannerSrc={bannerSrc}
+            />
           ) : tab === "templates" ? (
             <TemplatesEditor profile={p} onSelectTemplate={(template) =>
               setP((old) => ({ ...old, template: template.id, accent: template.accent }))
