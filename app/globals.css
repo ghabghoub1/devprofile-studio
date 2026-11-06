@@ -88,3 +88,27 @@
   .layout-switch, .preview-controls .switch { width: 100%; }
   .layout-switch button, .preview-controls .switch button { flex: 1; }
 }
+
+
+/* v0.4.1 GitHub Connect */
+.github-connect{max-width:1424px;margin:0 auto 22px;padding:22px 26px;border:1px solid #2b3b54;border-radius:14px;background:linear-gradient(130deg,#121c2c,#0d1522);color:#e9eef8}
+.github-connect-heading h2{font-size:18px;margin:8px 0 6px}
+.github-connect-heading p{font-size:12px;color:#95a6bc;margin:0 0 18px}
+.github-connect-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:800;letter-spacing:1.2px;color:#65caff}
+.github-connect-form label{display:block;font-size:12px;color:#b3c5da;margin-bottom:8px}
+.github-connect-inputrow{display:flex;gap:10px;max-width:570px}
+.github-connect-inputrow input{min-width:0;flex:1;background:#0b1220;border:1px solid #34455d;border-radius:8px;padding:11px 13px;color:#fff;font-size:13px}
+.github-connect-inputrow .primary{justify-content:center;white-space:nowrap}
+.github-connect-inputrow button:disabled{opacity:.65;cursor:not-allowed}
+.github-connect-error{color:#fda4af;font-size:12px;margin:12px 0 0}
+.github-connect-result{display:flex;align-items:center;gap:15px;margin-top:20px;padding:16px;background:#0b1422;border:1px solid #30445c;border-radius:10px}
+.github-connect-result img{width:66px;height:66px;object-fit:cover;border-radius:50%;flex-shrink:0}
+.github-connect-details{display:flex;flex-direction:column;gap:5px;min-width:0}
+.github-connect-details strong{font-size:15px}
+.github-connect-details span,.github-connect-details small{font-size:12px;color:#8ea4be}
+.github-connect-details p{font-size:12px;line-height:1.5;margin:2px 0;color:#c1cede}
+.github-connect-open{margin-left:auto;color:#70c9fa;padding:8px}
+.github-connect-spin{animation:github-connect-rotate 1s linear infinite}
+@keyframes github-connect-rotate{to{transform:rotate(360deg)}}
+@media(max-width:950px){.github-connect{margin:0 16px 22px}}
+@media(max-width:680px){.github-connect{padding:18px}.github-connect-inputrow{flex-wrap:wrap}.github-connect-inputrow input{flex-basis:100%}.github-connect-inputrow button{width:100%}.github-connect-result{align-items:flex-start}.github-connect-result img{width:48px;height:48px}}
