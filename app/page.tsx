@@ -20,6 +20,7 @@ import {
 import {
   initial,
   markdown,
+  normalizeProfile,
   type Profile,
   type Section,
 } from "../lib/profile";
@@ -61,23 +62,7 @@ export default function Home() {
       const saved = localStorage.getItem("devprofile-v1");
 
       if (saved) {
-        const parsed = JSON.parse(saved);
-
-        setP({
-          ...initial,
-          ...parsed,
-          banner: {
-            ...initial.banner,
-            ...parsed.banner,
-            enabled:
-              parsed.banner?.source === "upload"
-                ? false
-                : Boolean(parsed.banner?.enabled),
-          },
-          template: templates.some((t) => t.id === parsed.template)
-            ? parsed.template
-            : "professional",
-        });
+        setP(normalizeProfile(JSON.parse(saved)));
       }
     } catch (error) {
       console.error("Failed to load saved profile:", error);

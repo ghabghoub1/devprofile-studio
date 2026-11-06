@@ -3,6 +3,42 @@ export type Section = 'about'|'skills'|'projects'|'stats'|'connect';
 export type Banner = {enabled:boolean;source:'url'|'upload';url:string;alt:string};
 export type Profile = {banner:Banner;name:string;username:string;headline:string;bio:string;location:string;skills:string;projects:string;linkedin:string;accent:string;template:TemplateId;sections:Section[];hidden:Section[]};
 export const initial:Profile={banner:{enabled:false,source:'url',url:'',alt:'Profile banner'},name:'Mohamed Lamine Rahali',username:'ghabghoub1',headline:'Software Engineer · Java Backend Developer · AI Enthusiast',bio:'I build reliable, scalable backend systems with Java and Spring Boot. Interested in software architecture, automation and AI.',location:'Tunisia',skills:'Java, Spring Boot, PostgreSQL, Docker, Git, REST APIs',projects:'Enterprise API | Secure REST services built with Spring Boot\nAI Experiments | Exploring intelligent developer tools',linkedin:'https://www.linkedin.com/in/mohamed-lamine-rahali/',accent:'#38bdf8',template:'professional',sections:['about','skills','projects','stats','connect'],hidden:[]};
+/** Restore untrusted or older browser data without allowing malformed fields into the editor. */
+export function normalizeProfile(value: unknown): Profile {
+  const data = value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown> : {};
+  const validSections: Section[] = ['about', 'skills', 'projects', 'stats', 'connect'];
+  const sectionList = (input: unknown): Section[] => Array.isArray(input)
+    ? [...new Set(input.filter((item): item is Section =>
+        typeof item === 'string' && validSections.includes(item as Section)))]
+    : [];
+  const ordered = sectionList(data.sections);
+  const sections = [...ordered, ...validSections.filter(section => !ordered.includes(section))];
+  const hidden = sectionList(data.hidden);
+  const bannerData = data.banner !== null && typeof data.banner === 'object' && !Array.isArray(data.banner)
+    ? data.banner as Record<string, unknown> : {};
+  const source = bannerData.source === 'upload' ? 'upload' : 'url';
+  const stringField = (key: keyof Profile): string =>
+    typeof data[key] === 'string' ? data[key] as string : initial[key] as string;
+  const template: TemplateId = ['professional', 'minimal', 'developer', 'creative'].includes(data.template as string)
+    ? data.template as TemplateId : initial.template;
+  const accent = stringField('accent');
+  return {
+    name: stringField('name'), username: stringField('username'),
+    headline: stringField('headline'), bio: stringField('bio'),
+    location: stringField('location'), skills: stringField('skills'),
+    projects: stringField('projects'), linkedin: stringField('linkedin'),
+    accent: /^#[0-9a-fA-F]{6}$/.test(accent) ? accent : initial.accent,
+    template, sections, hidden,
+    banner: {
+      source,
+      // Uploaded File objects are session-only and cannot be restored from localStorage.
+      enabled: source === 'url' && bannerData.enabled === true,
+      url: typeof bannerData.url === 'string' ? bannerData.url : initial.banner.url,
+      alt: typeof bannerData.alt === 'string' ? bannerData.alt : initial.banner.alt,
+    },
+  };
+}
 export const labels:Record<Section,string>={about:'About me',skills:'Tech stack',projects:'Featured projects',stats:'GitHub stats',connect:'Connect'};
 const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const cleanUrl=(s:string)=>/^https:\/\/[\w.-]+(?:[/?#][^\s<>]*)?$/.test(s)?s:'';

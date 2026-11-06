@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasSectionContent, initial, markdown, parseProjects, type Profile } from '../lib/profile';
+import { hasSectionContent, initial, markdown, normalizeProfile, parseProjects, type Profile } from '../lib/profile';
 
 const profile = (overrides: Partial<Profile> = {}): Profile => ({
   ...initial,
@@ -77,5 +77,37 @@ describe('markdown', () => {
       banner: { enabled: true, source: 'url', url: 'https://example.com/banner.png', alt: 'A "banner" & more' },
     }));
     expect(safe).toContain('alt="A &quot;banner&quot; &amp; more"');
+  });
+});
+
+
+describe('normalizeProfile', () => {
+  it('restores defaults for null and malformed data', () => {
+    expect(normalizeProfile(null)).toEqual(initial);
+    expect(normalizeProfile({ name: 12, skills: null, banner: 'bad', sections: 42 })).toEqual(initial);
+  });
+  it('preserves valid user text and custom section ordering', () => {
+    const result = normalizeProfile({ name: 'Alex', sections: ['projects', 'about'], hidden: ['skills'] });
+    expect(result.name).toBe('Alex');
+    expect(result.sections).toEqual(['projects', 'about', 'skills', 'stats', 'connect']);
+    expect(result.hidden).toEqual(['skills']);
+  });
+  it('removes unknown and duplicate sections', () => {
+    const result = normalizeProfile({ sections: ['stats', 'invalid', 'stats', null], hidden: ['connect', 'invalid', 'connect'] });
+    expect(result.sections).toEqual(['stats', 'about', 'skills', 'projects', 'connect']);
+    expect(result.hidden).toEqual(['connect']);
+  });
+  it('rejects invalid template and accent values', () => {
+    const result = normalizeProfile({ template: 'unknown', accent: 'red' });
+    expect(result.template).toBe(initial.template);
+    expect(result.accent).toBe(initial.accent);
+  });
+  it('never restores a session-only uploaded banner as enabled', () => {
+    const result = normalizeProfile({ banner: { enabled: true, source: 'upload', url: 'ignored', alt: 'My banner' } });
+    expect(result.banner).toEqual({ enabled: false, source: 'upload', url: 'ignored', alt: 'My banner' });
+  });
+  it('restores a URL banner when explicitly enabled', () => {
+    const result = normalizeProfile({ banner: { enabled: true, source: 'url', url: 'https://example.com/banner.png', alt: 'Hello' } });
+    expect(result.banner).toEqual({ enabled: true, source: 'url', url: 'https://example.com/banner.png', alt: 'Hello' });
   });
 });
