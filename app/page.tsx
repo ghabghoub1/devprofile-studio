@@ -14,6 +14,8 @@ import {
   Layers3,
   Palette,
   RotateCcw,
+  MoreHorizontal,
+  Trash2,
   Sparkles,
   Image as ImageIcon,
   Upload,
@@ -367,6 +369,28 @@ export default function Home() {
   // RESET PROFILE
   // --------------------------------------------------
 
+  const applyGitHubImport = (changes: Partial<Pick<Profile, "name" | "username" | "bio" | "location" | "headline">>) => {
+    setP((old) => ({ ...old, ...changes }));
+    setTab("content");
+  };
+
+  const clearProfile = () => {
+    if (!window.confirm("Clear all personal information? Your template, appearance, banner, and section settings will be preserved.")) return;
+
+    setP((old) => ({
+      ...old,
+      name: "",
+      username: "",
+      headline: "",
+      location: "",
+      bio: "",
+      skills: "",
+      projects: "",
+      linkedin: "",
+    }));
+    setTab("content");
+  };
+
   const resetProfile = () => {
     if (window.confirm("Reset your profile to the example?")) {
       setP(initial);
@@ -450,14 +474,14 @@ export default function Home() {
           </p>
         </div>
 
-        <span className="version">STUDIO / v0.4.1</span>
+        <span className="version">STUDIO / v0.4.2</span>
       </div>
 
       {/* ============================================
           WORKSPACE
       ============================================ */}
 
-      <GitHubConnect initialUsername={initial.username} />
+      <GitHubConnect initialUsername={initial.username} editorProfile={p} onImport={applyGitHubImport} />
 
       <div className="workspace">
         {/* ============================================
@@ -468,9 +492,27 @@ export default function Home() {
           <div className="sidehead">
             <span>PROFILE EDITOR</span>
 
-            <button title="Reset profile" onClick={resetProfile}>
-              <RotateCcw size={15} />
-            </button>
+            <details className="profile-actions">
+              <summary aria-label="Profile editor actions" title="Profile editor actions">
+                <MoreHorizontal size={19} aria-hidden="true" />
+              </summary>
+              <div className="profile-actions-menu">
+                <button type="button" onClick={(event) => {
+                  event.currentTarget.closest("details")?.removeAttribute("open");
+                  clearProfile();
+                }}>
+                  <Trash2 size={15} aria-hidden="true" />
+                  Clear profile
+                </button>
+                <button type="button" onClick={(event) => {
+                  event.currentTarget.closest("details")?.removeAttribute("open");
+                  resetProfile();
+                }}>
+                  <RotateCcw size={15} aria-hidden="true" />
+                  Reset to example
+                </button>
+              </div>
+            </details>
           </div>
 
           {/* EDITOR TABS */}
@@ -1097,7 +1139,7 @@ export default function Home() {
 
       <footer>
         Made for developers, by developers.
-        <span>DevProfile Studio · v0.4.1</span>
+        <span>DevProfile Studio · v0.4.2</span>
       </footer>
     </main>
   );

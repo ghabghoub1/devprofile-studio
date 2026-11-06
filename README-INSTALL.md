@@ -1,13 +1,13 @@
-# DevProfile Studio v0.4.1 — GitHub Connect
+# DevProfile Studio v0.4.2 — Profile actions patch
 
-Copy these files into the existing project, keeping all other project files unchanged:
+Replace only `app/page.tsx` and `app/globals.css` in your existing working v0.4.2 project.
 
-- `app/page.tsx`
-- `app/globals.css`
-- `lib/profile.ts` (unchanged, provided for reference)
-- `lib/github.ts` (new)
-- `components/github/GitHubConnect.tsx` (new)
+The GitHub Connect / Smart Import components and library files remain unchanged.
 
-Run `npm run build` and `npm run dev`.
+In Profile Editor, click the `...` menu:
+- **Clear profile**: clears name, username, headline, location, bio, skills, projects, and LinkedIn URL; preserves template, accent, sections, and banner.
+- **Reset to example**: restores original example and clears uploaded banner state.
 
-GitHub Connect is a read-only public profile lookup. It does not import into the editor, persist account information, or change README export. Smart Import is reserved for v0.4.2.
+Both actions ask for confirmation. Clear does not disconnect GitHub Connect or modify Smart Import state.
+
+Run `npm run build` and `npm run dev` to verify locally.
