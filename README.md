@@ -23,3 +23,10 @@ Open the **Banner** tab to upload a PNG/JPG/WebP (up to 5 MB) or enter a public 
 ```bash
 npm run build
 ```
+## Documentation
+
+New to DevProfile Studio? Follow the [step-by-step User Guide](docs/USER-GUIDE.md) to connect GitHub, edit your profile, preview changes, and publish your README.
+
+Want to contribute? Read the [Developer Guide](docs/DEVELOPER-GUIDE.md) for local setup, architecture, development workflow, and release checks.
+
+**Featured projects:** Enter one project per line using `Project Name | Optional description`. The description is optional; a project name alone is valid.
