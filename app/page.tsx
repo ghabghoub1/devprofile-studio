@@ -33,6 +33,7 @@ import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
 import ReadmePreview from "../components/preview/ReadmePreview";
 import ContentEditor from "../components/editor/ContentEditor";
 import AppearanceEditor from "../components/editor/AppearanceEditor";
+import TemplatesEditor from "../components/editor/TemplatesEditor";
 import PreviewControls, { type PreviewMode, type ProfileView } from "../components/preview/PreviewControls";
 import type { GitHubUser } from "../lib/github";
 
@@ -692,51 +693,9 @@ export default function Home() {
               </p>
             </div>
           ) : tab === "templates" ? (
-            /* ============================================
-                TEMPLATE EDITOR
-            ============================================ */
-
-            <div className="sidebody">
-              <h3>Choose a template</h3>
-
-              <p className="hint">
-                Switch styles without losing your profile information.
-              </p>
-
-              <div className="templategrid">
-                {templates.map((template) => (
-                  <button
-                    key={template.id}
-                    className={
-                      "templatecard " +
-                      (p.template === template.id ? "templateactive" : "")
-                    }
-                    onClick={() =>
-                      setP((old) => ({
-                        ...old,
-                        template: template.id,
-                        accent: template.accent,
-                      }))
-                    }
-                  >
-                    <span
-                      className="templateswatch"
-                      style={{
-                        background: template.accent,
-                      }}
-                    />
-
-                    <strong>{template.name}</strong>
-
-                    <small>{template.description}</small>
-
-                    {p.template === template.id && (
-                      <span className="templatecheck">✓ Selected</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <TemplatesEditor profile={p} onSelectTemplate={(template) =>
+              setP((old) => ({ ...old, template: template.id, accent: template.accent }))
+            } />
           ) : tab === "content" ? (
             <ContentEditor
               profile={p}
