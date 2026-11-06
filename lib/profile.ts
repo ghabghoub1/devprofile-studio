@@ -1,7 +1,8 @@
 export type TemplateId = 'professional'|'minimal'|'developer'|'creative';
 export type Section = 'about'|'skills'|'projects'|'stats'|'connect';
-export type Profile = {name:string;username:string;headline:string;bio:string;location:string;skills:string;projects:string;linkedin:string;accent:string;template:TemplateId;sections:Section[];hidden:Section[]};
-export const initial:Profile={name:'Mohamed Lamine Rahali',username:'ghabghoub1',headline:'Software Engineer · Java Backend Developer · AI Enthusiast',bio:'I build reliable, scalable backend systems with Java and Spring Boot. Interested in software architecture, automation and AI.',location:'Tunisia',skills:'Java, Spring Boot, PostgreSQL, Docker, Git, REST APIs',projects:'Enterprise API | Secure REST services built with Spring Boot\nAI Experiments | Exploring intelligent developer tools',linkedin:'https://www.linkedin.com/in/mohamed-lamine-rahali/',accent:'#38bdf8',template:'professional',sections:['about','skills','projects','stats','connect'],hidden:[]};
+export type Banner = {enabled:boolean;source:'url'|'upload';url:string;alt:string};
+export type Profile = {banner:Banner;name:string;username:string;headline:string;bio:string;location:string;skills:string;projects:string;linkedin:string;accent:string;template:TemplateId;sections:Section[];hidden:Section[]};
+export const initial:Profile={banner:{enabled:false,source:'url',url:'',alt:'Profile banner'},name:'Mohamed Lamine Rahali',username:'ghabghoub1',headline:'Software Engineer · Java Backend Developer · AI Enthusiast',bio:'I build reliable, scalable backend systems with Java and Spring Boot. Interested in software architecture, automation and AI.',location:'Tunisia',skills:'Java, Spring Boot, PostgreSQL, Docker, Git, REST APIs',projects:'Enterprise API | Secure REST services built with Spring Boot\nAI Experiments | Exploring intelligent developer tools',linkedin:'https://www.linkedin.com/in/mohamed-lamine-rahali/',accent:'#38bdf8',template:'professional',sections:['about','skills','projects','stats','connect'],hidden:[]};
 export const labels:Record<Section,string>={about:'About me',skills:'Tech stack',projects:'Featured projects',stats:'GitHub stats',connect:'Connect'};
 const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const cleanUrl=(s:string)=>/^https:\/\/[\w.-]+(?:[/?#][^\s<>]*)?$/.test(s)?s:'';
@@ -16,7 +17,9 @@ export function markdown(p:Profile){
    : p.template==='creative'
    ? ['<div align="center">','',`# ✨ ${title}`,'',`### ${headline}`,'',`🌍 ${p.location}`,'','</div>']
    : ['<div align="center">','',`# ${title}`,'',`**${headline}**`,'',`📍 ${p.location}`,'','</div>'];
- const lines=[...header,'','---'];
+ const bannerUrl=p.banner?.enabled?(p.banner.source==='upload'?'./assets/banner.png':cleanUrl(p.banner.url)):'';
+ const banner=bannerUrl?['<p align="center">',`  <img src="${esc(bannerUrl)}" alt="${esc(p.banner.alt||'Profile banner')}" width="100%" />`,'</p>','']:[];
+ const lines=[...banner,...header,'','---'];
  for(const s of p.sections){
    if(p.hidden.includes(s))continue;
    lines.push('');

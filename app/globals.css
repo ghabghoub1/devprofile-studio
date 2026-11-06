@@ -2,3 +2,89 @@
 
 /* v0.2 templates */
 .templategrid{display:grid;gap:12px}.templatecard{text-align:left;position:relative;border:1px solid #334158;border-radius:12px;background:#101d30;padding:16px;color:#dce7f5;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,transform .15s}.templatecard:hover{border-color:#7abfe9;transform:translateY(-1px)}.templatecard.templateactive{border-color:#38bdf8;background:#152a3e}.templateswatch{height:7px;width:65px;border-radius:8px}.templatecard strong{font-size:15px}.templatecard small{font-size:11px;color:#91a3ba;line-height:1.5}.templatecheck{font-size:11px;color:#65d5ff;font-weight:700}.theme-minimal .avatar{border-radius:50%;border-color:#64748b}.theme-minimal .heroeyebrow{letter-spacing:1px;color:#94a3b8}.theme-minimal .profileSection{border-bottom-color:#30363d}.theme-minimal .badges span{background:transparent;border-color:#3c4656;color:#d1d5db}.theme-developer{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.theme-developer .profilehero{text-align:left}.theme-developer .avatar{margin-left:0;border-radius:5px}.theme-developer .herolinks{justify-content:flex-start}.theme-developer .heroeyebrow{color:#34d399}.theme-developer .profileSection h3{color:#34d399}.theme-creative .profilehero{background:linear-gradient(130deg,#25153c,#14263e);border-radius:15px;padding:30px 15px}.theme-creative .avatar{border-radius:50%;background:#2d2049}.theme-creative .badges span{border-radius:30px}.tabs button{font-size:11px;gap:5px}@media(max-width:680px){.tabs button{font-size:12px}}
+
+/* v0.3 banner and GitHub layout */
+.tabs{padding:0 5px}.tabs button{font-size:10px;gap:4px}.bannercheck{display:flex;align-items:center;gap:9px;font-size:13px;margin-bottom:20px}.bannercheck input{accent-color:#38bdf8}.bannerchoices{display:flex;gap:8px;margin:12px 0 20px}.bannerchoices button{display:flex;align-items:center;gap:7px;border:1px solid #34435b;background:#111d2d;color:#c2d2e7;border-radius:8px;padding:10px;font-size:12px}.bannerchoices button.chosen{border-color:#38bdf8;color:#7dd3fc}.uploadbox{display:block;border:1px dashed #52708b;padding:24px 12px;text-align:center;border-radius:9px;font-size:12px;cursor:pointer;margin-bottom:14px}.uploadbox input{display:block;width:100%;margin-top:12px;font-size:11px}.bannerthumb{width:100%;height:auto;max-height:160px;object-fit:contain;border-radius:7px;margin:12px 0}.bannererror{color:#fda4af;font-size:12px}.readmebanner{display:block;width:100%;height:auto;object-fit:contain;margin:0 auto 20px}.githublayout{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);gap:16px;align-items:start}.githublayout .readme{padding:20px;min-width:0;width:100%}.githubside{display:flex;flex-direction:column;gap:7px;font-size:13px;color:#dce4ee}.githubavatar{width:100%;aspect-ratio:1;max-width:180px;display:grid;place-items:center;border-radius:50%;background:#204c79;font-size:45px;font-weight:700;margin-bottom:10px}.githubside>span{color:#8b949e}.githubside p{font-size:12px;line-height:1.5}.githubside small{color:#9aa5b1}.githubside .hint{margin-top:18px}.githublayout .profilehero h2{font-size:23px}.githublayout .projects{grid-template-columns:1fr}@media(max-width:760px){.githublayout{grid-template-columns:1fr}.githubside{display:none}.tabs button{font-size:11px}}
+
+/* v0.3.1 — Preview toolbar: independent layout and display controls */
+.previewbar {
+  height: auto;
+  min-height: 76px;
+  padding: 14px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+}
+.previewbar > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-width: 0;
+}
+.previewbar .previewnote { margin-left: 0; }
+.preview-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+.layout-switch,
+.preview-controls .switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  background: #151e2d;
+  border: 1px solid #2b3548;
+  border-radius: 10px;
+}
+.layout-switch button,
+.preview-controls .switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 13px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #93a4bd;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease;
+}
+.layout-switch button:hover,
+.preview-controls .switch button:hover { background: #202d40; color: #f1f7ff; }
+.layout-switch button.selected,
+.preview-controls .switch button.selected {
+  background: #2b3a51;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px #3a4c66;
+}
+.layout-switch button:focus-visible,
+.preview-controls .switch button:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+@media (max-width: 1200px) {
+  .previewbar { align-items: flex-start; }
+  .preview-controls { justify-content: flex-start; width: 100%; }
+}
+@media (max-width: 680px) {
+  .previewbar { gap: 12px; }
+  .preview-controls { gap: 8px; }
+  .layout-switch button,
+  .preview-controls .switch button { padding: 8px 10px; font-size: 11px; }
+}
+@media (max-width: 420px) {
+  .layout-switch, .preview-controls .switch { width: 100%; }
+  .layout-switch button, .preview-controls .switch button { flex: 1; }
+}
