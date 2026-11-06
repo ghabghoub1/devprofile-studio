@@ -2,42 +2,46 @@
 
 import { useEffect, useState } from "react";
 import {
-  ArrowDown,
-  ArrowUp,
   Check,
   Copy,
   Download,
-  Eye,
-  FileCode2,
   Github,
-  GripVertical,
   Layers3,
   Palette,
   RotateCcw,
+  MoreHorizontal,
+  Trash2,
   Sparkles,
   Image as ImageIcon,
-  Upload,
-  Link2,
+  BookOpen,
+  ExternalLink,
 } from "lucide-react";
 
 import {
   initial,
-  labels,
   markdown,
+  normalizeProfile,
   type Profile,
   type Section,
 } from "../lib/profile";
 
 import { templates } from "../lib/templates";
-import JSZip from "jszip";
+import { appVersion } from "../lib/version";
+import { buildProfileExport, isValidBannerUrl, validateBannerExport, validateBannerFile } from "../lib/banner-export";
 import GitHubConnect from "../components/github/GitHubConnect";
+import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
+import ReadmePreview from "../components/preview/ReadmePreview";
+import ContentEditor from "../components/editor/ContentEditor";
+import AppearanceEditor from "../components/editor/AppearanceEditor";
+import TemplatesEditor from "../components/editor/TemplatesEditor";
+import BannerEditor from "../components/editor/BannerEditor";
+import PreviewControls, { type PreviewMode, type ProfileView } from "../components/preview/PreviewControls";
+import type { GitHubUser } from "../lib/github";
 
 type EditorTab = "content" | "design" | "templates" | "banner";
-type PreviewMode = "preview" | "markdown";
-type ProfileView = "readme" | "github";
-
 export default function Home() {
   const [p, setP] = useState<Profile>(initial);
+  const [connectedGitHubUser, setConnectedGitHubUser] = useState<GitHubUser | null>(null);
 
   const [tab, setTab] = useState<EditorTab>("content");
   const [mode, setMode] = useState<PreviewMode>("preview");
@@ -59,23 +63,7 @@ export default function Home() {
       const saved = localStorage.getItem("devprofile-v1");
 
       if (saved) {
-        const parsed = JSON.parse(saved);
-
-        setP({
-          ...initial,
-          ...parsed,
-          banner: {
-            ...initial.banner,
-            ...parsed.banner,
-            enabled:
-              parsed.banner?.source === "upload"
-                ? false
-                : Boolean(parsed.banner?.enabled),
-          },
-          template: templates.some((t) => t.id === parsed.template)
-            ? parsed.template
-            : "professional",
-        });
+        setP(normalizeProfile(JSON.parse(saved)));
       }
     } catch (error) {
       console.error("Failed to load saved profile:", error);
@@ -145,25 +133,6 @@ export default function Home() {
         : [...old.hidden, section],
     }));
   };
-
-  const field = (label: string, key: keyof Profile, large = false) => (
-    <label className="field" key={key}>
-      <span>{label}</span>
-
-      {large ? (
-        <textarea
-          value={p[key] as string}
-          rows={key === "projects" ? 5 : 4}
-          onChange={(event) => change(key, event.target.value)}
-        />
-      ) : (
-        <input
-          value={p[key] as string}
-          onChange={(event) => change(key, event.target.value)}
-        />
-      )}
-    </label>
-  );
 
   // --------------------------------------------------
   // CLIPBOARD
@@ -247,15 +216,9 @@ export default function Home() {
 
     setBannerError("");
 
-    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-      setBannerError("Please select a PNG, JPEG or WebP image.");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setBannerError("The maximum image size is 5 MB.");
+    const validationError = validateBannerFile(file);
+    if (validationError) {
+      setBannerError(validationError);
       return;
     }
 
@@ -289,16 +252,6 @@ export default function Home() {
   // BANNER URL
   // --------------------------------------------------
 
-  const isValidBannerUrl = (value: string) => {
-    try {
-      const url = new URL(value);
-
-      return url.protocol === "https:" && Boolean(url.hostname);
-    } catch {
-      return false;
-    }
-  };
-
   const bannerSrc = p.banner.enabled
     ? p.banner.source === "upload"
       ? bannerPreview
@@ -314,51 +267,19 @@ export default function Home() {
   const download = async () => {
     setBannerError("");
 
-    if (p.banner.enabled && p.banner.source === "upload" && !uploadedBanner) {
-      setBannerError("Please choose a banner image before exporting.");
-
-      setTab("banner");
-      return;
-    }
-
-    if (
-      p.banner.enabled &&
-      p.banner.source === "url" &&
-      !isValidBannerUrl(p.banner.url)
-    ) {
-      setBannerError("Please enter a valid public HTTPS image URL.");
-
+    const validationError = validateBannerExport(p, uploadedBanner);
+    if (validationError) {
+      setBannerError(validationError);
       setTab("banner");
       return;
     }
 
     try {
-      if (p.banner.enabled && p.banner.source === "upload" && uploadedBanner) {
-        const zip = new JSZip();
-
-        zip.file("README.md", markdown(p));
-
-        const normalizedImage = await normalizeBanner(uploadedBanner);
-
-        zip.file("assets/banner.png", normalizedImage);
-
-        const zipBlob = await zip.generateAsync({
-          type: "blob",
-        });
-
-        saveBlob(zipBlob, "github-profile.zip");
-      } else {
-        const blob = new Blob([markdown(p)], {
-          type: "text/markdown;charset=utf-8",
-        });
-
-        saveBlob(blob, "README.md");
-      }
+      const { blob, filename } = await buildProfileExport(p, uploadedBanner, normalizeBanner);
+      saveBlob(blob, filename);
     } catch (error) {
       console.error("Export failed:", error);
-
       setBannerError("Unable to export the profile. Please try again.");
-
       setTab("banner");
     }
   };
@@ -366,6 +287,28 @@ export default function Home() {
   // --------------------------------------------------
   // RESET PROFILE
   // --------------------------------------------------
+
+  const applyGitHubImport = (changes: Partial<Pick<Profile, "name" | "username" | "bio" | "location" | "headline">>) => {
+    setP((old) => ({ ...old, ...changes }));
+    setTab("content");
+  };
+
+  const clearProfile = () => {
+    if (!window.confirm("Clear all personal information? Your template, appearance, banner, and section settings will be preserved.")) return;
+
+    setP((old) => ({
+      ...old,
+      name: "",
+      username: "",
+      headline: "",
+      location: "",
+      bio: "",
+      skills: "",
+      projects: "",
+      linkedin: "",
+    }));
+    setTab("content");
+  };
 
   const resetProfile = () => {
     if (window.confirm("Reset your profile to the example?")) {
@@ -450,14 +393,19 @@ export default function Home() {
           </p>
         </div>
 
-        <span className="version">STUDIO / v0.4.1</span>
+        <span className="version">STUDIO / v{appVersion}</span>
       </div>
 
       {/* ============================================
           WORKSPACE
       ============================================ */}
 
-      <GitHubConnect initialUsername={initial.username} />
+      <GitHubConnect
+          initialUsername={initial.username}
+          editorProfile={p}
+          onImport={applyGitHubImport}
+          onConnectedUserChange={setConnectedGitHubUser}
+        />
 
       <div className="workspace">
         {/* ============================================
@@ -468,9 +416,27 @@ export default function Home() {
           <div className="sidehead">
             <span>PROFILE EDITOR</span>
 
-            <button title="Reset profile" onClick={resetProfile}>
-              <RotateCcw size={15} />
-            </button>
+            <details className="profile-actions">
+              <summary aria-label="Profile editor actions" title="Profile editor actions">
+                <MoreHorizontal size={19} aria-hidden="true" />
+              </summary>
+              <div className="profile-actions-menu">
+                <button type="button" onClick={(event) => {
+                  event.currentTarget.closest("details")?.removeAttribute("open");
+                  clearProfile();
+                }}>
+                  <Trash2 size={15} aria-hidden="true" />
+                  Clear profile
+                </button>
+                <button type="button" onClick={(event) => {
+                  event.currentTarget.closest("details")?.removeAttribute("open");
+                  resetProfile();
+                }}>
+                  <RotateCcw size={15} aria-hidden="true" />
+                  Reset to example
+                </button>
+              </div>
+            </details>
           </div>
 
           {/* EDITOR TABS */}
@@ -509,309 +475,27 @@ export default function Home() {
             </button>
           </div>
 
-          {/* ============================================
-              BANNER EDITOR
-          ============================================ */}
-
           {tab === "banner" ? (
-            <div className="sidebody">
-              <h3>Profile banner</h3>
-
-              <p className="hint">
-                Add a personal banner at the top of your README. GitHub already
-                displays your avatar in the profile sidebar.
-              </p>
-
-              <label className="bannercheck">
-                <input
-                  type="checkbox"
-                  checked={p.banner.enabled}
-                  onChange={(event) =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        enabled: event.target.checked,
-                      },
-                    }))
-                  }
-                />
-                Show banner
-              </label>
-
-              <div className="bannerchoices">
-                <button
-                  className={p.banner.source === "upload" ? "chosen" : ""}
-                  onClick={() =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        source: "upload",
-                      },
-                    }))
-                  }
-                >
-                  <Upload size={15} />
-                  Upload
-                </button>
-
-                <button
-                  className={p.banner.source === "url" ? "chosen" : ""}
-                  onClick={() =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        source: "url",
-                      },
-                    }))
-                  }
-                >
-                  <Link2 size={15} />
-                  Image URL
-                </button>
-              </div>
-
-              {p.banner.source === "upload" ? (
-                <>
-                  <label className="uploadbox">
-                    Choose PNG, JPG or WebP (max 5 MB)
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={(event) =>
-                        onBannerFile(event.target.files?.[0])
-                      }
-                    />
-                  </label>
-
-                  <p className="hint">
-                    Uploaded images are stored only for this browser session.
-                    Export the ZIP before refreshing.
-                  </p>
-                </>
-              ) : (
-                <label className="field">
-                  <span>Public HTTPS image URL</span>
-
-                  <input
-                    placeholder="https://example.com/banner.png"
-                    value={p.banner.url}
-                    onChange={(event) =>
-                      setP((old) => ({
-                        ...old,
-                        banner: {
-                          ...old.banner,
-                          url: event.target.value,
-                          enabled: true,
-                        },
-                      }))
-                    }
-                  />
-                </label>
-              )}
-
-              <label className="field">
-                <span>Accessible description</span>
-
-                <input
-                  value={p.banner.alt}
-                  onChange={(event) =>
-                    setP((old) => ({
-                      ...old,
-                      banner: {
-                        ...old.banner,
-                        alt: event.target.value,
-                      },
-                    }))
-                  }
-                />
-              </label>
-
-              {bannerError && (
-                <p role="alert" className="bannererror">
-                  {bannerError}
-                </p>
-              )}
-
-              {bannerSrc && (
-                <img
-                  className="bannerthumb"
-                  src={bannerSrc}
-                  alt={p.banner.alt || "Banner preview"}
-                />
-              )}
-
-              <button
-                className="secondary"
-                onClick={() =>
-                  setP((old) => ({
-                    ...old,
-                    banner: {
-                      ...old.banner,
-                      enabled: false,
-                    },
-                  }))
-                }
-              >
-                Remove banner
-              </button>
-
-              <p className="hint">
-                Uploaded banners are exported with README.md inside a ZIP. URL
-                banners reference the public image directly.
-              </p>
-            </div>
+            <BannerEditor
+              profile={p}
+              setProfile={setP}
+              onBannerFile={onBannerFile}
+              bannerError={bannerError}
+              bannerSrc={bannerSrc}
+            />
           ) : tab === "templates" ? (
-            /* ============================================
-                TEMPLATE EDITOR
-            ============================================ */
-
-            <div className="sidebody">
-              <h3>Choose a template</h3>
-
-              <p className="hint">
-                Switch styles without losing your profile information.
-              </p>
-
-              <div className="templategrid">
-                {templates.map((template) => (
-                  <button
-                    key={template.id}
-                    className={
-                      "templatecard " +
-                      (p.template === template.id ? "templateactive" : "")
-                    }
-                    onClick={() =>
-                      setP((old) => ({
-                        ...old,
-                        template: template.id,
-                        accent: template.accent,
-                      }))
-                    }
-                  >
-                    <span
-                      className="templateswatch"
-                      style={{
-                        background: template.accent,
-                      }}
-                    />
-
-                    <strong>{template.name}</strong>
-
-                    <small>{template.description}</small>
-
-                    {p.template === template.id && (
-                      <span className="templatecheck">✓ Selected</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <TemplatesEditor profile={p} onSelectTemplate={(template) =>
+              setP((old) => ({ ...old, template: template.id, accent: template.accent }))
+            } />
           ) : tab === "content" ? (
-            /* ============================================
-                CONTENT EDITOR
-            ============================================ */
-
-            <div className="sidebody">
-              <h3>Personal information</h3>
-
-              {field("Full name", "name")}
-
-              {field("GitHub username", "username")}
-
-              {field("Professional headline", "headline")}
-
-              {field("Location", "location")}
-
-              {field("About you", "bio", true)}
-
-              {field("Skills (comma-separated)", "skills", true)}
-
-              {field("Projects (one per line)", "projects", true)}
-
-              {field("LinkedIn URL", "linkedin")}
-
-              <div className="sectiontitle">
-                <h3>Profile sections</h3>
-
-                <span>ORDER & VISIBILITY</span>
-              </div>
-
-              {p.sections.map((section) => (
-                <div className="sectionrow" key={section}>
-                  <GripVertical size={15} className="muted" />
-
-                  <span>{labels[section]}</span>
-
-                  <button
-                    aria-label={`Move ${section} up`}
-                    onClick={() => move(section, -1)}
-                  >
-                    <ArrowUp size={14} />
-                  </button>
-
-                  <button
-                    aria-label={`Move ${section} down`}
-                    onClick={() => move(section, 1)}
-                  >
-                    <ArrowDown size={14} />
-                  </button>
-
-                  <input
-                    type="checkbox"
-                    checked={!p.hidden.includes(section)}
-                    onChange={() => toggle(section)}
-                    aria-label={`Show ${section}`}
-                  />
-                </div>
-              ))}
-            </div>
+            <ContentEditor
+              profile={p}
+              onChange={change}
+              onMove={move}
+              onToggle={toggle}
+            />
           ) : (
-            /* ============================================
-                APPEARANCE EDITOR
-            ============================================ */
-
-            <div className="sidebody">
-              <h3>Accent color</h3>
-
-              <p className="hint">
-                Choose a color for your editor preview. GitHub Markdown does not
-                support custom CSS.
-              </p>
-
-              <div className="colors">
-                {["#38bdf8", "#a78bfa", "#34d399", "#fb7185", "#fbbf24"].map(
-                  (color) => (
-                    <button
-                      key={color}
-                      className={p.accent === color ? "chosen" : ""}
-                      style={{
-                        background: color,
-                      }}
-                      onClick={() => change("accent", color)}
-                      aria-label={`Choose ${color}`}
-                    />
-                  ),
-                )}
-              </div>
-
-              <label className="field">
-                <span>Custom accent</span>
-
-                <input
-                  type="color"
-                  value={p.accent}
-                  onChange={(event) => change("accent", event.target.value)}
-                />
-              </label>
-
-              <div className="tip">
-                ✦ Templates are available in the Templates tab. Custom SVG
-                statistics are planned.
-              </div>
-            </div>
+            <AppearanceEditor profile={p} onChange={change} />
           )}
         </aside>
 
@@ -832,43 +516,12 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="preview-controls">
-  {mode === "preview" && (
-    <div className="layout-switch">
-      <button
-        className={profileView === "readme" ? "selected" : ""}
-        onClick={() => setProfileView("readme")}
-      >
-        README only
-      </button>
-
-      <button
-        className={profileView === "github" ? "selected" : ""}
-        onClick={() => setProfileView("github")}
-      >
-        GitHub layout
-      </button>
-    </div>
-  )}
-
-  <div className="switch">
-    <button
-      className={mode === "preview" ? "selected" : ""}
-      onClick={() => setMode("preview")}
-    >
-      <Eye size={15} />
-      Preview
-    </button>
-
-    <button
-      className={mode === "markdown" ? "selected" : ""}
-      onClick={() => setMode("markdown")}
-    >
-      <FileCode2 size={15} />
-      Markdown
-    </button>
-  </div>
-</div>
+            <PreviewControls
+              mode={mode}
+              profileView={profileView}
+              onModeChange={setMode}
+              onProfileViewChange={setProfileView}
+            />
 </div>
 
           {/* ============================================
@@ -877,172 +530,32 @@ export default function Home() {
 
           {mode === "preview" ? (
             <div className={profileView === "github" ? "githublayout" : ""}>
-              {/* GITHUB SIDEBAR */}
-
               {profileView === "github" && (
-                <aside className="githubside">
-                  <div className="githubavatar">
-                    {p.name
-                      .trim()
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((name) => name[0] || "")
-                      .join("")
-                      .toUpperCase()}
-                  </div>
-
-                  <strong>{p.name}</strong>
-
-                  <span>{p.username}</span>
-
-                  <p>{p.headline}</p>
-
-                  <small>⌖ {p.location}</small>
-
-                  <p className="hint">
-                    This sidebar is illustrative. GitHub displays your real
-                    avatar and account details.
-                  </p>
-                </aside>
+                <GitHubProfilePreview user={connectedGitHubUser} editorUsername={p.username} />
               )}
 
-              {/* README */}
-
-              <article
-                className={`readme theme-${p.template}`}
-                style={
-                  {
-                    "--accent": p.accent,
-                  } as React.CSSProperties
-                }
-              >
-                {/* BANNER */}
-
-                {bannerSrc && (
-                  <img
-                    className="readmebanner"
-                    src={bannerSrc}
-                    alt={p.banner.alt || "Profile banner"}
-                  />
+              {/* README and GitHub-style account navigation */}
+              <div className="github-preview-main">
+                {profileView === "github" && (
+                  <nav className="github-profile-nav" aria-label="GitHub profile navigation">
+                    <span className="github-profile-nav-active" aria-current="page">
+                      <BookOpen size={16} aria-hidden="true" /> Overview
+                    </span>
+                    {connectedGitHubUser ? (
+                      <a href={`${connectedGitHubUser.html_url}?tab=repositories`} target="_blank" rel="noopener noreferrer" title="Open repositories on GitHub">
+                        <Github size={16} aria-hidden="true" /> Repositories
+                        <span className="github-profile-nav-count">{connectedGitHubUser.public_repos}</span>
+                        <ExternalLink size={12} aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <span className="github-profile-nav-disabled" title="Connect a GitHub account to view repositories">
+                        <Github size={16} aria-hidden="true" /> Repositories
+                      </span>
+                    )}
+                  </nav>
                 )}
-
-                {/* PROFILE HERO */}
-
-                <div className="profilehero">
-                  <div className="heroeyebrow">
-                    {p.template === "minimal"
-                      ? "PROFILE"
-                      : p.template === "developer"
-                        ? "~/developer $ whoami"
-                        : p.template === "creative"
-                          ? "✨ HELLO WORLD"
-                          : "HELLO, I'M"}
-                  </div>
-
-                  <h2>{p.name}</h2>
-
-                  <p className="headline">{p.headline}</p>
-
-                  <span className="location">⌖ {p.location}</span>
-
-                  <div className="herolinks">
-                    <span>◉ GitHub</span>
-
-                    {p.linkedin && <span>in LinkedIn</span>}
-                  </div>
-                </div>
-
-                {/* README SECTIONS */}
-
-                {p.sections
-                  .filter((section) => !p.hidden.includes(section))
-                  .map((section) => (
-                    <section className="profileSection" key={section}>
-                      <h3>
-                        {section === "about"
-                          ? "👋"
-                          : section === "skills"
-                            ? "🛠️"
-                            : section === "projects"
-                              ? "🚀"
-                              : section === "stats"
-                                ? "📊"
-                                : "🤝"}{" "}
-                        {labels[section]}
-                      </h3>
-
-                      {/* ABOUT */}
-
-                      {section === "about" && <p>{p.bio}</p>}
-
-                      {/* SKILLS */}
-
-                      {section === "skills" && (
-                        <div className="badges">
-                          {p.skills
-                            .split(",")
-                            .filter(Boolean)
-                            .map((skill, index) => (
-                              <span key={index}>{skill.trim()}</span>
-                            ))}
-                        </div>
-                      )}
-
-                      {/* PROJECTS */}
-
-                      {section === "projects" && (
-                        <div className="projects">
-                          {p.projects
-                            .split("\n")
-                            .filter(Boolean)
-                            .map((item, index) => (
-                              <div className="project" key={index}>
-                                <strong>{item.split("|")[0].trim()}</strong>
-
-                                <p>
-                                  {item.split("|").slice(1).join("|").trim() ||
-                                    "Add a project description"}
-                                </p>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-
-                      {/* GITHUB STATS */}
-
-                      {section === "stats" && (
-                        <div className="statmock">
-                          <div>
-                            <strong>GitHub statistics</strong>
-
-                            <small>
-                              Dynamic card URL included in exported README
-                            </small>
-                          </div>
-
-                          <div className="statbars">
-                            <i />
-                            <i />
-                            <i />
-                            <i />
-                            <i />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* CONNECT */}
-
-                      {section === "connect" && (
-                        <p>
-                          Find me on GitHub as <strong>@{p.username}</strong>
-                          {p.linkedin
-                            ? " or connect with me on LinkedIn."
-                            : "."}
-                        </p>
-                      )}
-                    </section>
-                  ))}
-              </article>
+              <ReadmePreview profile={p} bannerSrc={bannerSrc} />
+              </div>
             </div>
           ) : (
             /* ============================================
@@ -1097,7 +610,7 @@ export default function Home() {
 
       <footer>
         Made for developers, by developers.
-        <span>DevProfile Studio · v0.4.1</span>
+        <span>DevProfile Studio · v{appVersion}</span>
       </footer>
     </main>
   );

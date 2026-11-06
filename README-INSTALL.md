@@ -1,13 +1,7 @@
-# DevProfile Studio v0.4.1 — GitHub Connect
+# DevProfile Studio v0.4.3 — Preview polish
 
-Copy these files into the existing project, keeping all other project files unchanged:
+Adds a GitHub-style Overview / Repositories navigation bar above the GitHub-layout README. The Repositories item opens the connected account's actual GitHub repositories in a new tab (it does not pretend to show local repository content). With no connected account, it is disabled.
 
-- `app/page.tsx`
-- `app/globals.css`
-- `lib/profile.ts` (unchanged, provided for reference)
-- `lib/github.ts` (new)
-- `components/github/GitHubConnect.tsx` (new)
+Empty About, Skills, Projects, Stats, and Connect sections are omitted from both the visual preview and exported Markdown. Stats requires a GitHub username; Connect requires a username or a valid LinkedIn URL. Editor fields and section toggles remain unchanged.
 
-Run `npm run build` and `npm run dev`.
-
-GitHub Connect is a read-only public profile lookup. It does not import into the editor, persist account information, or change README export. Smart Import is reserved for v0.4.2.
+Copy `app/page.tsx`, `app/globals.css`, and `lib/profile.ts` into your project. Leave your existing GitHub Connect components and other files in place. Run `npm run build` and `npm run dev` locally, then verify the two preview modes and Markdown export.
