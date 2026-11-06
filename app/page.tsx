@@ -32,6 +32,7 @@ import GitHubConnect from "../components/github/GitHubConnect";
 import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
 import ReadmePreview from "../components/preview/ReadmePreview";
 import ContentEditor from "../components/editor/ContentEditor";
+import AppearanceEditor from "../components/editor/AppearanceEditor";
 import PreviewControls, { type PreviewMode, type ProfileView } from "../components/preview/PreviewControls";
 import type { GitHubUser } from "../lib/github";
 
@@ -744,49 +745,7 @@ export default function Home() {
               onToggle={toggle}
             />
           ) : (
-            /* ============================================
-                APPEARANCE EDITOR
-            ============================================ */
-
-            <div className="sidebody">
-              <h3>Accent color</h3>
-
-              <p className="hint">
-                Choose a color for your editor preview. GitHub Markdown does not
-                support custom CSS.
-              </p>
-
-              <div className="colors">
-                {["#38bdf8", "#a78bfa", "#34d399", "#fb7185", "#fbbf24"].map(
-                  (color) => (
-                    <button
-                      key={color}
-                      className={p.accent === color ? "chosen" : ""}
-                      style={{
-                        background: color,
-                      }}
-                      onClick={() => change("accent", color)}
-                      aria-label={`Choose ${color}`}
-                    />
-                  ),
-                )}
-              </div>
-
-              <label className="field">
-                <span>Custom accent</span>
-
-                <input
-                  type="color"
-                  value={p.accent}
-                  onChange={(event) => change("accent", event.target.value)}
-                />
-              </label>
-
-              <div className="tip">
-                ✦ Templates are available in the Templates tab. Custom SVG
-                statistics are planned.
-              </div>
-            </div>
+            <AppearanceEditor profile={p} onChange={change} />
           )}
         </aside>
 
