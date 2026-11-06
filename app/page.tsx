@@ -7,8 +7,6 @@ import {
   Check,
   Copy,
   Download,
-  Eye,
-  FileCode2,
   Github,
   GripVertical,
   Layers3,
@@ -36,11 +34,10 @@ import JSZip from "jszip";
 import GitHubConnect from "../components/github/GitHubConnect";
 import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
 import ReadmePreview from "../components/preview/ReadmePreview";
+import PreviewControls, { type PreviewMode, type ProfileView } from "../components/preview/PreviewControls";
 import type { GitHubUser } from "../lib/github";
 
 type EditorTab = "content" | "design" | "templates" | "banner";
-type PreviewMode = "preview" | "markdown";
-type ProfileView = "readme" | "github";
 const labels: Record<string, string> = {
   about: "About me",
   skills: "Skills",
@@ -909,43 +906,12 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="preview-controls">
-  {mode === "preview" && (
-    <div className="layout-switch">
-      <button
-        className={profileView === "readme" ? "selected" : ""}
-        onClick={() => setProfileView("readme")}
-      >
-        README only
-      </button>
-
-      <button
-        className={profileView === "github" ? "selected" : ""}
-        onClick={() => setProfileView("github")}
-      >
-        GitHub layout
-      </button>
-    </div>
-  )}
-
-  <div className="switch">
-    <button
-      className={mode === "preview" ? "selected" : ""}
-      onClick={() => setMode("preview")}
-    >
-      <Eye size={15} />
-      Preview
-    </button>
-
-    <button
-      className={mode === "markdown" ? "selected" : ""}
-      onClick={() => setMode("markdown")}
-    >
-      <FileCode2 size={15} />
-      Markdown
-    </button>
-  </div>
-</div>
+            <PreviewControls
+              mode={mode}
+              profileView={profileView}
+              onModeChange={setMode}
+              onProfileViewChange={setProfileView}
+            />
 </div>
 
           {/* ============================================
