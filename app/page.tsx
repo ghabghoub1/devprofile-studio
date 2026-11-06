@@ -29,7 +29,6 @@ import {
   labels,
   markdown,
   hasSectionContent,
-  parseProjects,
   type Profile,
   type Section,
 } from "../lib/profile";
@@ -38,6 +37,7 @@ import { templates } from "../lib/templates";
 import JSZip from "jszip";
 import GitHubConnect from "../components/github/GitHubConnect";
 import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
+import ProjectCards from "../components/preview/ProjectCards";
 import type { GitHubUser } from "../lib/github";
 
 type EditorTab = "content" | "design" | "templates" | "banner";
@@ -1056,14 +1056,7 @@ export default function Home() {
                       {/* PROJECTS */}
 
                       {section === "projects" && (
-                        <div className="projects">
-                          {parseProjects(p.projects).map((project, index) => (
-                            <div className="project" key={index}>
-                              <strong>{project.name}</strong>
-                              {project.description && <p>{project.description}</p>}
-                            </div>
-                          ))}
-                        </div>
+                        <ProjectCards projects={p.projects} />
                       )}
 
                       {/* GITHUB STATS */}
