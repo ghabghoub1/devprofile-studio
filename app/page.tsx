@@ -26,9 +26,7 @@ import {
 
 import {
   initial,
-  labels,
   markdown,
-  hasSectionContent,
   type Profile,
   type Section,
 } from "../lib/profile";
@@ -37,13 +35,20 @@ import { templates } from "../lib/templates";
 import JSZip from "jszip";
 import GitHubConnect from "../components/github/GitHubConnect";
 import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
-import ProjectCards from "../components/preview/ProjectCards";
+import ReadmePreview from "../components/preview/ReadmePreview";
 import type { GitHubUser } from "../lib/github";
 
 type EditorTab = "content" | "design" | "templates" | "banner";
 type PreviewMode = "preview" | "markdown";
 type ProfileView = "readme" | "github";
-
+const labels: Record<string, string> = {
+  about: "About me",
+  skills: "Skills",
+  projects: "Featured projects",
+  stats: "GitHub stats",
+  socials: "Social links",
+  connect: "Connect",
+};
 export default function Home() {
   const [p, setP] = useState<Profile>(initial);
   const [connectedGitHubUser, setConnectedGitHubUser] = useState<GitHubUser | null>(null);
@@ -815,7 +820,7 @@ export default function Home() {
                 <div className="sectionrow" key={section}>
                   <GripVertical size={15} className="muted" />
 
-                  <span>{labels[section]}</span>
+                  <span>{labels[section] ?? section}</span>
 
                   <button
                     aria-label={`Move ${section} up`}
@@ -973,127 +978,7 @@ export default function Home() {
                     )}
                   </nav>
                 )}
-              <article
-                className={`readme theme-${p.template}`}
-                style={
-                  {
-                    "--accent": p.accent,
-                  } as React.CSSProperties
-                }
-              >
-                {/* BANNER */}
-
-                {bannerSrc && (
-                  <img
-                    className="readmebanner"
-                    src={bannerSrc}
-                    alt={p.banner.alt || "Profile banner"}
-                  />
-                )}
-
-                {/* PROFILE HERO */}
-
-                <div className="profilehero">
-                  <div className="heroeyebrow">
-                    {p.template === "minimal"
-                      ? "PROFILE"
-                      : p.template === "developer"
-                        ? "~/developer $ whoami"
-                        : p.template === "creative"
-                          ? "✨ HELLO WORLD"
-                          : "HELLO, I'M"}
-                  </div>
-
-                  <h2>{p.name}</h2>
-
-                  <p className="headline">{p.headline}</p>
-
-                  <span className="location">⌖ {p.location}</span>
-
-                  <div className="herolinks">
-                    <span>◉ GitHub</span>
-
-                    {p.linkedin && <span>in LinkedIn</span>}
-                  </div>
-                </div>
-
-                {/* README SECTIONS */}
-
-                {p.sections
-                  .filter((section) => !p.hidden.includes(section) && hasSectionContent(p, section))
-                  .map((section) => (
-                    <section className="profileSection" key={section}>
-                      <h3>
-                        {section === "about"
-                          ? "👋"
-                          : section === "skills"
-                            ? "🛠️"
-                            : section === "projects"
-                              ? "🚀"
-                              : section === "stats"
-                                ? "📊"
-                                : "🤝"}{" "}
-                        {labels[section]}
-                      </h3>
-
-                      {/* ABOUT */}
-
-                      {section === "about" && <p>{p.bio}</p>}
-
-                      {/* SKILLS */}
-
-                      {section === "skills" && (
-                        <div className="badges">
-                          {p.skills
-                            .split(",")
-                            .filter((skill) => skill.trim())
-                            .map((skill, index) => (
-                              <span key={index}>{skill.trim()}</span>
-                            ))}
-                        </div>
-                      )}
-
-                      {/* PROJECTS */}
-
-                      {section === "projects" && (
-                        <ProjectCards projects={p.projects} />
-                      )}
-
-                      {/* GITHUB STATS */}
-
-                      {section === "stats" && (
-                        <div className="statmock">
-                          <div>
-                            <strong>GitHub statistics</strong>
-
-                            <small>
-                              Dynamic card URL included in exported README
-                            </small>
-                          </div>
-
-                          <div className="statbars">
-                            <i />
-                            <i />
-                            <i />
-                            <i />
-                            <i />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* CONNECT */}
-
-                      {section === "connect" && (
-                        <p>
-                          Find me on GitHub as <strong>@{p.username}</strong>
-                          {p.linkedin
-                            ? " or connect with me on LinkedIn."
-                            : "."}
-                        </p>
-                      )}
-                    </section>
-                  ))}
-              </article>
+              <ReadmePreview profile={p} bannerSrc={bannerSrc} />
               </div>
             </div>
           ) : (
