@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from "react";
 import {
-  ArrowDown,
-  ArrowUp,
   Check,
   Copy,
   Download,
   Github,
-  GripVertical,
   Layers3,
   Palette,
   RotateCcw,
@@ -34,18 +31,11 @@ import JSZip from "jszip";
 import GitHubConnect from "../components/github/GitHubConnect";
 import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
 import ReadmePreview from "../components/preview/ReadmePreview";
+import ContentEditor from "../components/editor/ContentEditor";
 import PreviewControls, { type PreviewMode, type ProfileView } from "../components/preview/PreviewControls";
 import type { GitHubUser } from "../lib/github";
 
 type EditorTab = "content" | "design" | "templates" | "banner";
-const labels: Record<string, string> = {
-  about: "About me",
-  skills: "Skills",
-  projects: "Featured projects",
-  stats: "GitHub stats",
-  socials: "Social links",
-  connect: "Connect",
-};
 export default function Home() {
   const [p, setP] = useState<Profile>(initial);
   const [connectedGitHubUser, setConnectedGitHubUser] = useState<GitHubUser | null>(null);
@@ -156,25 +146,6 @@ export default function Home() {
         : [...old.hidden, section],
     }));
   };
-
-  const field = (label: string, key: keyof Profile, large = false) => (
-    <label className="field" key={key}>
-      <span>{label}</span>
-
-      {large ? (
-        <textarea
-          value={p[key] as string}
-          rows={key === "projects" ? 5 : 4}
-          onChange={(event) => change(key, event.target.value)}
-        />
-      ) : (
-        <input
-          value={p[key] as string}
-          onChange={(event) => change(key, event.target.value)}
-        />
-      )}
-    </label>
-  );
 
   // --------------------------------------------------
   // CLIPBOARD
@@ -766,82 +737,12 @@ export default function Home() {
               </div>
             </div>
           ) : tab === "content" ? (
-            /* ============================================
-                CONTENT EDITOR
-            ============================================ */
-
-            <div className="sidebody">
-              <h3>Personal information</h3>
-
-              {field("Full name", "name")}
-
-              {field("GitHub username", "username")}
-
-              {field("Professional headline", "headline")}
-
-              {field("Location", "location")}
-
-              {field("About you", "bio", true)}
-
-              {field("Skills (comma-separated)", "skills", true)}
-
-              <label className="field">
-  <span>Projects (one per line)</span>
-
-  <textarea
-    value={p.projects}
-    rows={5}
-    placeholder={
-      "DevProfile Studio | GitHub README profile builder\n" +
-      "Task Manager API | REST API built with Spring Boot\n" +
-      "AI Assistant | AI-powered developer tool"
-    }
-    onChange={(event) => change("projects", event.target.value)}
-  />
-
-  <small className="hint">
-    Enter one project per line using:
-    <strong> Project Name | Description</strong>
-  </small>
-</label>
-
-              {field("LinkedIn URL", "linkedin")}
-
-              <div className="sectiontitle">
-                <h3>Profile sections</h3>
-
-                <span>ORDER & VISIBILITY</span>
-              </div>
-
-              {p.sections.map((section) => (
-                <div className="sectionrow" key={section}>
-                  <GripVertical size={15} className="muted" />
-
-                  <span>{labels[section] ?? section}</span>
-
-                  <button
-                    aria-label={`Move ${section} up`}
-                    onClick={() => move(section, -1)}
-                  >
-                    <ArrowUp size={14} />
-                  </button>
-
-                  <button
-                    aria-label={`Move ${section} down`}
-                    onClick={() => move(section, 1)}
-                  >
-                    <ArrowDown size={14} />
-                  </button>
-
-                  <input
-                    type="checkbox"
-                    checked={!p.hidden.includes(section)}
-                    onChange={() => toggle(section)}
-                    aria-label={`Show ${section}`}
-                  />
-                </div>
-              ))}
-            </div>
+            <ContentEditor
+              profile={p}
+              onChange={change}
+              onMove={move}
+              onToggle={toggle}
+            />
           ) : (
             /* ============================================
                 APPEARANCE EDITOR
