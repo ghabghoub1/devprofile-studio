@@ -26,7 +26,7 @@ import {
 } from "../lib/profile";
 
 import { templates } from "../lib/templates";
-import JSZip from "jszip";
+import { buildProfileExport, isValidBannerUrl, validateBannerExport, validateBannerFile } from "../lib/banner-export";
 import GitHubConnect from "../components/github/GitHubConnect";
 import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
 import ReadmePreview from "../components/preview/ReadmePreview";
@@ -215,15 +215,9 @@ export default function Home() {
 
     setBannerError("");
 
-    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-      setBannerError("Please select a PNG, JPEG or WebP image.");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setBannerError("The maximum image size is 5 MB.");
+    const validationError = validateBannerFile(file);
+    if (validationError) {
+      setBannerError(validationError);
       return;
     }
 
@@ -257,16 +251,6 @@ export default function Home() {
   // BANNER URL
   // --------------------------------------------------
 
-  const isValidBannerUrl = (value: string) => {
-    try {
-      const url = new URL(value);
-
-      return url.protocol === "https:" && Boolean(url.hostname);
-    } catch {
-      return false;
-    }
-  };
-
   const bannerSrc = p.banner.enabled
     ? p.banner.source === "upload"
       ? bannerPreview
@@ -282,51 +266,19 @@ export default function Home() {
   const download = async () => {
     setBannerError("");
 
-    if (p.banner.enabled && p.banner.source === "upload" && !uploadedBanner) {
-      setBannerError("Please choose a banner image before exporting.");
-
-      setTab("banner");
-      return;
-    }
-
-    if (
-      p.banner.enabled &&
-      p.banner.source === "url" &&
-      !isValidBannerUrl(p.banner.url)
-    ) {
-      setBannerError("Please enter a valid public HTTPS image URL.");
-
+    const validationError = validateBannerExport(p, uploadedBanner);
+    if (validationError) {
+      setBannerError(validationError);
       setTab("banner");
       return;
     }
 
     try {
-      if (p.banner.enabled && p.banner.source === "upload" && uploadedBanner) {
-        const zip = new JSZip();
-
-        zip.file("README.md", markdown(p));
-
-        const normalizedImage = await normalizeBanner(uploadedBanner);
-
-        zip.file("assets/banner.png", normalizedImage);
-
-        const zipBlob = await zip.generateAsync({
-          type: "blob",
-        });
-
-        saveBlob(zipBlob, "github-profile.zip");
-      } else {
-        const blob = new Blob([markdown(p)], {
-          type: "text/markdown;charset=utf-8",
-        });
-
-        saveBlob(blob, "README.md");
-      }
+      const { blob, filename } = await buildProfileExport(p, uploadedBanner, normalizeBanner);
+      saveBlob(blob, filename);
     } catch (error) {
       console.error("Export failed:", error);
-
       setBannerError("Unable to export the profile. Please try again.");
-
       setTab("banner");
     }
   };
