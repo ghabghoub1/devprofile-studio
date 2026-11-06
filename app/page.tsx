@@ -26,6 +26,7 @@ import {
 } from "../lib/profile";
 
 import { templates } from "../lib/templates";
+import { appVersion } from "../lib/version";
 import { buildProfileExport, isValidBannerUrl, validateBannerExport, validateBannerFile } from "../lib/banner-export";
 import GitHubConnect from "../components/github/GitHubConnect";
 import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
@@ -392,7 +393,7 @@ export default function Home() {
           </p>
         </div>
 
-        <span className="version">STUDIO / v0.4.3</span>
+        <span className="version">STUDIO / v{appVersion}</span>
       </div>
 
       {/* ============================================
@@ -609,7 +610,7 @@ export default function Home() {
 
       <footer>
         Made for developers, by developers.
-        <span>DevProfile Studio · v0.4.3</span>
+        <span>DevProfile Studio · v{appVersion}</span>
       </footer>
     </main>
   );

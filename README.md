@@ -1,4 +1,4 @@
-# DevProfile Studio v0.3.0
+# DevProfile Studio v0.4.4
 
 Visual GitHub profile README builder with templates, personal banners, and live previews.
 
@@ -17,6 +17,15 @@ Open the **Banner** tab to upload a PNG/JPG/WebP (up to 5 MB) or enter a public 
 - URL banners export `README.md` with the hosted URL. The image must remain publicly accessible.
 - The GitHub layout is an approximation, not a pixel-perfect GitHub renderer.
 - Other profile fields and settings persist in localStorage.
+
+## Quality checks
+
+```bash
+npm test
+npm run build
+```
+
+The app displays its version from `package.json`. For a future release, update the version using `npm version <new-version> --no-git-tag-version`, then update this README heading.
 
 ## Build
 
