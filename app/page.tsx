@@ -30,6 +30,7 @@ import {
 
 import { templates } from "../lib/templates";
 import JSZip from "jszip";
+import GitHubConnect from "../components/github/GitHubConnect";
 
 type EditorTab = "content" | "design" | "templates" | "banner";
 type PreviewMode = "preview" | "markdown";
@@ -449,12 +450,14 @@ export default function Home() {
           </p>
         </div>
 
-        <span className="version">STUDIO / v0.3</span>
+        <span className="version">STUDIO / v0.4.1</span>
       </div>
 
       {/* ============================================
           WORKSPACE
       ============================================ */}
+
+      <GitHubConnect initialUsername={initial.username} />
 
       <div className="workspace">
         {/* ============================================
@@ -1094,7 +1097,7 @@ export default function Home() {
 
       <footer>
         Made for developers, by developers.
-        <span>DevProfile Studio · v0.3</span>
+        <span>DevProfile Studio · v0.4.1</span>
       </footer>
     </main>
   );
