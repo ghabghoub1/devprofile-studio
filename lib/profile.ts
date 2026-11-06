@@ -6,12 +6,20 @@ export const initial:Profile={banner:{enabled:false,source:'url',url:'',alt:'Pro
 export const labels:Record<Section,string>={about:'About me',skills:'Tech stack',projects:'Featured projects',stats:'GitHub stats',connect:'Connect'};
 const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const cleanUrl=(s:string)=>/^https:\/\/[\w.-]+(?:[/?#][^\s<>]*)?$/.test(s)?s:'';
+/** Parse one project per line: Name | Optional description. */
+export type Project = { name: string; description: string };
+export function parseProjects(input: string): Project[] {
+  return input.split(/\r?\n/).map(line => {
+    const [name, ...description] = line.split('|');
+    return { name: name.trim(), description: description.join('|').trim() };
+  }).filter(project => project.name.length > 0);
+}
 /** Keep the visual preview and exported README consistent for empty sections. */
 export function hasSectionContent(p: Profile, section: Section): boolean {
   switch (section) {
     case 'about': return Boolean(p.bio.trim());
     case 'skills': return p.skills.split(',').some(skill => skill.trim().length > 0);
-    case 'projects': return p.projects.split('\n').some(project => project.trim().length > 0);
+    case 'projects': return parseProjects(p.projects).length > 0;
     case 'stats': return Boolean(p.username.trim());
     case 'connect': return Boolean(p.username.trim() || cleanUrl(p.linkedin));
   }
@@ -35,7 +43,7 @@ export function markdown(p:Profile){
    lines.push('');
    if(s==='about')lines.push('## 👋 About me','',p.bio);
    if(s==='skills')lines.push('## 🛠️ Tech stack','',p.skills.split(',').filter(x=>x.trim()).map(x=>'`'+x.trim().replace(/`/g,'')+'`').join(' · '));
-   if(s==='projects')lines.push('## 🚀 Featured projects','',...p.projects.split('\n').filter(x=>x.trim()).map(x=>'- **'+x.split('|')[0].trim().replace(/\*/g,'')+'**'+(x.includes('|')?' — '+x.split('|').slice(1).join('|').trim():'')));
+   if(s==='projects')lines.push('## 🚀 Featured projects','',...parseProjects(p.projects).map(project=>'- **'+project.name.replace(/\*/g,'')+'**'+(project.description?' — '+project.description:'')));
    if(s==='stats')lines.push('## 📊 GitHub statistics','',`![GitHub stats](https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=tokyonight)`,'',`![Top languages](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=tokyonight)`);
    if(s==='connect')lines.push('## 🤝 Connect','',`${p.username.trim()?`[GitHub](https://github.com/${username})`:''}${cleanUrl(p.linkedin)?`${p.username.trim()?' · ':''}[LinkedIn](${cleanUrl(p.linkedin)})`:''}`);
  }

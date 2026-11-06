@@ -29,6 +29,7 @@ import {
   labels,
   markdown,
   hasSectionContent,
+  parseProjects,
   type Profile,
   type Section,
 } from "../lib/profile";
@@ -1056,18 +1057,12 @@ export default function Home() {
 
                       {section === "projects" && (
                         <div className="projects">
-                          {p.projects
-                            .split("\n")
-                            .filter((item) => item.trim())
-                            .map((item, index) => (
-                              <div className="project" key={index}>
-                                <strong>{item.split("|")[0].trim()}</strong>
-
-                                {item.split("|").slice(1).join("|").trim() && (
-                                 <p>{item.split("|").slice(1).join("|").trim()}</p>
-                                        )}
-                              </div>
-                            ))}
+                          {parseProjects(p.projects).map((project, index) => (
+                            <div className="project" key={index}>
+                              <strong>{project.name}</strong>
+                              {project.description && <p>{project.description}</p>}
+                            </div>
+                          ))}
                         </div>
                       )}
 
