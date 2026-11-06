@@ -1,13 +1,7 @@
-# DevProfile Studio v0.4.2 — Profile actions patch
+# DevProfile Studio v0.4.3 — Preview polish
 
-Replace only `app/page.tsx` and `app/globals.css` in your existing working v0.4.2 project.
+Adds a GitHub-style Overview / Repositories navigation bar above the GitHub-layout README. The Repositories item opens the connected account's actual GitHub repositories in a new tab (it does not pretend to show local repository content). With no connected account, it is disabled.
 
-The GitHub Connect / Smart Import components and library files remain unchanged.
+Empty About, Skills, Projects, Stats, and Connect sections are omitted from both the visual preview and exported Markdown. Stats requires a GitHub username; Connect requires a username or a valid LinkedIn URL. Editor fields and section toggles remain unchanged.
 
-In Profile Editor, click the `...` menu:
-- **Clear profile**: clears name, username, headline, location, bio, skills, projects, and LinkedIn URL; preserves template, accent, sections, and banner.
-- **Reset to example**: restores original example and clears uploaded banner state.
-
-Both actions ask for confirmation. Clear does not disconnect GitHub Connect or modify Smart Import state.
-
-Run `npm run build` and `npm run dev` to verify locally.
+Copy `app/page.tsx`, `app/globals.css`, and `lib/profile.ts` into your project. Leave your existing GitHub Connect components and other files in place. Run `npm run build` and `npm run dev` locally, then verify the two preview modes and Markdown export.

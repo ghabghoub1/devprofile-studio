@@ -11,6 +11,7 @@ type Props = {
   initialUsername: string;
   editorProfile: Profile;
   onImport: (changes: Partial<Pick<Profile, ImportKey>>) => void;
+  onConnectedUserChange?: (user: GitHubUser | null) => void;
 };
 const importFields: { key: ImportKey; label: string }[] = [
   { key: "name", label: "Full name" },
@@ -29,7 +30,7 @@ function importValues(user: GitHubUser): Record<ImportKey, string> {
   };
 }
 
-export default function GitHubConnect({ initialUsername, editorProfile, onImport }: Props) {
+export default function GitHubConnect({ initialUsername, editorProfile, onImport, onConnectedUserChange }: Props) {
   const [username, setUsername] = useState(initialUsername);
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [error, setError] = useState("");
@@ -48,12 +49,14 @@ export default function GitHubConnect({ initialUsername, editorProfile, onImport
     setLoading(true);
     setError("");
     setUser(null);
+    onConnectedUserChange?.(null);
     setSelected([]);
     setImported(false);
     try {
       const result = await fetchGitHubUser(username, next.signal);
       if (!next.signal.aborted) {
         setUser(result);
+        onConnectedUserChange?.(result);
         const incoming = importValues(result);
         setSelected(importFields.filter(({ key }) => incoming[key] && incoming[key] !== editorProfile[key]).map(({ key }) => key));
       }
@@ -81,7 +84,7 @@ export default function GitHubConnect({ initialUsername, editorProfile, onImport
     <section className="github-connect" aria-labelledby="github-connect-title">
       <div className="github-connect-heading">
         <div>
-          <span className="github-connect-eyebrow"><Github size={14} /> GITHUB CONNECT · v0.4.2</span>
+          <span className="github-connect-eyebrow"><Github size={14} /> GITHUB CONNECT · v0.4.3</span>
           <h2 id="github-connect-title">Connect your GitHub profile</h2>
           <p>Look up public account information, then choose what to import. Connecting alone never edits your README.</p>
         </div>

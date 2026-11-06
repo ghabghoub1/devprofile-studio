@@ -20,12 +20,15 @@ import {
   Image as ImageIcon,
   Upload,
   Link2,
+  BookOpen,
+  ExternalLink,
 } from "lucide-react";
 
 import {
   initial,
   labels,
   markdown,
+  hasSectionContent,
   type Profile,
   type Section,
 } from "../lib/profile";
@@ -33,6 +36,8 @@ import {
 import { templates } from "../lib/templates";
 import JSZip from "jszip";
 import GitHubConnect from "../components/github/GitHubConnect";
+import GitHubProfilePreview from "../components/github/GitHubProfilePreview";
+import type { GitHubUser } from "../lib/github";
 
 type EditorTab = "content" | "design" | "templates" | "banner";
 type PreviewMode = "preview" | "markdown";
@@ -40,6 +45,7 @@ type ProfileView = "readme" | "github";
 
 export default function Home() {
   const [p, setP] = useState<Profile>(initial);
+  const [connectedGitHubUser, setConnectedGitHubUser] = useState<GitHubUser | null>(null);
 
   const [tab, setTab] = useState<EditorTab>("content");
   const [mode, setMode] = useState<PreviewMode>("preview");
@@ -474,14 +480,19 @@ export default function Home() {
           </p>
         </div>
 
-        <span className="version">STUDIO / v0.4.2</span>
+        <span className="version">STUDIO / v0.4.3</span>
       </div>
 
       {/* ============================================
           WORKSPACE
       ============================================ */}
 
-      <GitHubConnect initialUsername={initial.username} editorProfile={p} onImport={applyGitHubImport} />
+      <GitHubConnect
+          initialUsername={initial.username}
+          editorProfile={p}
+          onImport={applyGitHubImport}
+          onConnectedUserChange={setConnectedGitHubUser}
+        />
 
       <div className="workspace">
         {/* ============================================
@@ -771,7 +782,25 @@ export default function Home() {
 
               {field("Skills (comma-separated)", "skills", true)}
 
-              {field("Projects (one per line)", "projects", true)}
+              <label className="field">
+  <span>Projects (one per line)</span>
+
+  <textarea
+    value={p.projects}
+    rows={5}
+    placeholder={
+      "DevProfile Studio | GitHub README profile builder\n" +
+      "Task Manager API | REST API built with Spring Boot\n" +
+      "AI Assistant | AI-powered developer tool"
+    }
+    onChange={(event) => change("projects", event.target.value)}
+  />
+
+  <small className="hint">
+    Enter one project per line using:
+    <strong> Project Name | Description</strong>
+  </small>
+</label>
 
               {field("LinkedIn URL", "linkedin")}
 
@@ -919,37 +948,30 @@ export default function Home() {
 
           {mode === "preview" ? (
             <div className={profileView === "github" ? "githublayout" : ""}>
-              {/* GITHUB SIDEBAR */}
-
               {profileView === "github" && (
-                <aside className="githubside">
-                  <div className="githubavatar">
-                    {p.name
-                      .trim()
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((name) => name[0] || "")
-                      .join("")
-                      .toUpperCase()}
-                  </div>
-
-                  <strong>{p.name}</strong>
-
-                  <span>{p.username}</span>
-
-                  <p>{p.headline}</p>
-
-                  <small>⌖ {p.location}</small>
-
-                  <p className="hint">
-                    This sidebar is illustrative. GitHub displays your real
-                    avatar and account details.
-                  </p>
-                </aside>
+                <GitHubProfilePreview user={connectedGitHubUser} editorUsername={p.username} />
               )}
 
-              {/* README */}
-
+              {/* README and GitHub-style account navigation */}
+              <div className="github-preview-main">
+                {profileView === "github" && (
+                  <nav className="github-profile-nav" aria-label="GitHub profile navigation">
+                    <span className="github-profile-nav-active" aria-current="page">
+                      <BookOpen size={16} aria-hidden="true" /> Overview
+                    </span>
+                    {connectedGitHubUser ? (
+                      <a href={`${connectedGitHubUser.html_url}?tab=repositories`} target="_blank" rel="noopener noreferrer" title="Open repositories on GitHub">
+                        <Github size={16} aria-hidden="true" /> Repositories
+                        <span className="github-profile-nav-count">{connectedGitHubUser.public_repos}</span>
+                        <ExternalLink size={12} aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <span className="github-profile-nav-disabled" title="Connect a GitHub account to view repositories">
+                        <Github size={16} aria-hidden="true" /> Repositories
+                      </span>
+                    )}
+                  </nav>
+                )}
               <article
                 className={`readme theme-${p.template}`}
                 style={
@@ -997,7 +1019,7 @@ export default function Home() {
                 {/* README SECTIONS */}
 
                 {p.sections
-                  .filter((section) => !p.hidden.includes(section))
+                  .filter((section) => !p.hidden.includes(section) && hasSectionContent(p, section))
                   .map((section) => (
                     <section className="profileSection" key={section}>
                       <h3>
@@ -1023,7 +1045,7 @@ export default function Home() {
                         <div className="badges">
                           {p.skills
                             .split(",")
-                            .filter(Boolean)
+                            .filter((skill) => skill.trim())
                             .map((skill, index) => (
                               <span key={index}>{skill.trim()}</span>
                             ))}
@@ -1036,15 +1058,14 @@ export default function Home() {
                         <div className="projects">
                           {p.projects
                             .split("\n")
-                            .filter(Boolean)
+                            .filter((item) => item.trim())
                             .map((item, index) => (
                               <div className="project" key={index}>
                                 <strong>{item.split("|")[0].trim()}</strong>
 
-                                <p>
-                                  {item.split("|").slice(1).join("|").trim() ||
-                                    "Add a project description"}
-                                </p>
+                                {item.split("|").slice(1).join("|").trim() && (
+                                 <p>{item.split("|").slice(1).join("|").trim()}</p>
+                                        )}
                               </div>
                             ))}
                         </div>
@@ -1085,6 +1106,7 @@ export default function Home() {
                     </section>
                   ))}
               </article>
+              </div>
             </div>
           ) : (
             /* ============================================
@@ -1139,7 +1161,7 @@ export default function Home() {
 
       <footer>
         Made for developers, by developers.
-        <span>DevProfile Studio · v0.4.2</span>
+        <span>DevProfile Studio · v0.4.3</span>
       </footer>
     </main>
   );
